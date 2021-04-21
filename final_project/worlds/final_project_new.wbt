@@ -1,0 +1,110 @@
+#VRML_SIM R2021a utf8
+WorldInfo {
+  coordinateSystem "NUE"
+}
+Viewpoint {
+  orientation 0.0869238430619341 -0.9653989026105478 -0.2458641989914231 3.7994192294508293
+  position 5.350442486372725 3.8356349515337795 -4.783154273452217
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+DirectionalLight {
+  direction 0 -1 0
+}
+Solid {
+  translation 0 -0.1 0
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColorMap ImageTexture {
+          url [
+            "textures/plastic.jpg"
+          ]
+        }
+        roughness 1
+        metalness 0
+      }
+      geometry DEF floor Box {
+        size 10 0.1 10
+      }
+    }
+  ]
+  boundingObject USE floor
+}
+Solid {
+  translation -5.01 2.35001 5.02
+  rotation 0 0 1 -1.5708003061004252
+  children [
+    Wall {
+      rotation 0 0 1 0
+      size 5 10 0.05
+      appearance PBRAppearance {
+        baseColorMap ImageTexture {
+          url [
+            "textures/plastic.jpg"
+          ]
+        }
+        roughness 1
+        metalness 0
+        emissiveColor 1 1 1
+        emissiveIntensity 0
+      }
+    }
+  ]
+  name "solid(1)"
+}
+TiagoSteelCustom {
+  translation 0 0.037983 0
+  controller "final_controller"
+  lidarSlot [
+    Pen {
+      translation 0 -0.078 0
+      children [
+        Solid {
+          rotation 1 0 0 0
+          children [
+            Shape {
+              appearance PBRAppearance {
+              }
+              geometry Cylinder {
+                height 0.1
+                radius 0.01
+              }
+            }
+          ]
+        }
+      ]
+      name "floor_pen"
+      radarCrossSection 1
+      inkColor 1 0 0.7
+      inkDensity 0.1
+      leadSize 0.1
+      write FALSE
+    }
+    HokuyoUrg04lxug01 {
+    }
+  ]
+  endEffectorSlot [
+    Pen {
+      rotation 1 0 0 3.14159
+      children [
+        Solid {
+          children [
+            Shape {
+              appearance PBRAppearance {
+              }
+              geometry Cylinder {
+                height 0.1
+                radius 0.01
+              }
+            }
+          ]
+        }
+      ]
+      inkColor 0.6 0 1
+      leadSize 0.03
+    }
+  ]
+}
