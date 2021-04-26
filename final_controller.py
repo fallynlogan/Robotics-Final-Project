@@ -52,6 +52,8 @@ print ("DEBUG: armchain \n", armChain)
 # Initialize the arm motors and encoders.
 print("DEBUG: armChain.links\n", armChain.links)
 # arm_1_joint through arm_7_joint control arm
+# joints = [arm_1_joint, arm_2_joint, arm_3_joint, arm_4_joint, arm_5_joint, arm_6_joint, arm_7_joint]
+
 motors = []
 for link in armChain.links:
     if 'motor' in link.name:
