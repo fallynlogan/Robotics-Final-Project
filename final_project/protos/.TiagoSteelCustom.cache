@@ -1,0 +1,11 @@
+Webots Proto Cache File version 1.5
+protoFileHash: ff8ec86cb8309e99f81b2285e2b38fdd
+needsRobotAncestor: 1
+baseType: Robot
+slotType: 
+parameters: translation,rotation,name,controller,controllerArgs,customData,supervisor,synchronization,selfCollision,cameraSlot,lidarSlot,endEffectorSlot
+tags: 
+license:  Apache License 2.0.
+licenseUrl:  http://www.apache.org/licenses/LICENSE-2.0.
+documentationUrl: https://www.cyberbotics.com/doc/guide/tiago-steel
+info: Steel\sversion\sof\sthe\sTIAGo\srobot\sfrom\sPAL\sRobotics.\nThe\srobot\sis\scomposed\sby\sthe\sTIAGo\sbase\sand\sa\sbody\swith\sthe\sfront\sarm\sequipped\swith\sa\sparallel\sgripper.\n

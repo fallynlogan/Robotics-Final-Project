@@ -58,6 +58,7 @@ Solid {
 TiagoSteelCustom {
   translation 0 0.037983 0
   controller "final_controller"
+  supervisor TRUE
   lidarSlot [
     Pen {
       translation 0 -0.078 0
@@ -87,6 +88,8 @@ TiagoSteelCustom {
     }
   ]
   endEffectorSlot [
+    Display {
+    }
     Pen {
       rotation 1 0 0 3.14159
       children [
@@ -105,6 +108,7 @@ TiagoSteelCustom {
       ]
       inkColor 0.6 0 1
       leadSize 0.03
+      write FALSE
     }
   ]
 }
