@@ -1,0 +1,213 @@
+"""final_controller controller."""
+
+# You may need to import some classes of the controller module. Ex:
+#  from controller import Robot, Motor, DistanceSensor
+from controller import  Robot, Motor, Camera, RangeFinder, Lidar
+import numpy as np
+import math
+
+#Wheel speed info
+MAX_SPEED = 7.0  # [rad/s]
+MAX_SPEED_MS = 0.5725 # [m/s]
+AXLE_LENGTH = 0.4044 # m
+MOTOR_LEFT = 10 # Left wheel index
+MOTOR_RIGHT = 11 # Right wheel index
+N_PARTS = 12 # Total joints
+
+# create the Robot instance.
+robot = Robot()
+
+# get the time step of the current world.
+timestep = int(robot.getBasicTimeStep())
+
+
+gps = robot.getDevice("gps")
+gps.enable(timestep)
+compass = robot.getDevice("compass")
+compass.enable(timestep)
+display = robot.getDevice("display")
+
+
+# The Tiago robot has multiple motors, each identified by their names below
+part_names = ("head_2_joint", "head_1_joint", "torso_lift_joint", "arm_1_joint",
+              "arm_2_joint",  "arm_3_joint",  "arm_4_joint",      "arm_5_joint",
+              "arm_6_joint",  "arm_7_joint",  "wheel_left_joint", "wheel_right_joint")
+
+# target_pos = (0.0, 0.0, 0.09, 0.07, 1.02, -3.16, 1.27, 1.32, 0.0, 1.41, 'inf', 'inf')             
+# target_pos = (0.0, 0.0, 0.09, 0.07, 0.26, -3.16, 1.27, 1.32, 0.0, 1.41, 'inf', 'inf')
+# target_pos = (0.0, 0.0, 0.00, 0.00, 0.0, 0, 0, 0, 0.0, 1.41, 'inf', 'inf')
+
+target_pos = (0.0, 0.0, 0.09, 0.07, -1.5, 0.4, 2.0, 2.0, -1.39, 0, 'inf', 'inf')             
+
+# target_pos = np.load("path.npy")
+# print(target_pos)
+
+robot_parts = []
+
+for i in range(N_PARTS):
+        robot_parts.append(robot.getDevice(part_names[i]))
+        robot_parts[i].setPosition(float(target_pos[i]))
+        robot_parts[i].setVelocity(robot_parts[i].getMaxVelocity() / 2.0)
+
+# Odometry
+pose_x     = 0
+pose_y     = 0
+pose_theta = 0
+
+
+floor_pen = robot.getDevice("floor_pen")
+wall_pen = robot.getDevice("pen")
+#initialize pen by turning them both off and turn on in wall/floor mode
+floor_pen.write(False)
+wall_pen.write(False)
+
+
+
+vL = 0
+vR = 0
+
+multiplier = 5
+# goals = np.load("path.npy")
+goals = np.load("newestPath.npy")
+print("length of goals", len(goals))
+print("goals",goals*multiplier, goals.shape)
+# print(goals[0])
+# print(goals[0][0])
+state = 0
+counter = 0
+print("goals:", len(goals))
+
+mode = 'floor'
+# mode = 'wall'
+# mode = 'manual'
+
+#gains?? change this maybe?? 
+p1 = 1.5
+p2 = 3
+
+firstShape = False
+secondShape = False
+thirdShape = False
+
+#Shiv: Printing the waypoints on the display (increase the display size if not visible. )
+aa = 0
+display.setColor(0xFFFFFF)
+for line in goals*multiplier:
+    for waypoint in line:
+        display.drawPixel(int(waypoint[0]*30), int(waypoint[1]*30)) 
+# Main loop:
+# - perform simulation steps until Webots is stopping the controller
+while robot.step(timestep) != -1:
+    if mode == 'floor': 
+        pose_y = gps.getValues()[2]
+        pose_x = gps.getValues()[0]
+        n = compass.getValues()
+        rad = -((math.atan2(n[0], n[2]))-1.5708)
+        pose_theta = rad
+        # if pose_theta > 0:
+            # pose_theta = -pose_theta
+            
+        if pose_x >= abs(goals[0][0][0]-.05)*multiplier and pose_x <= abs(goals[0][0][0]+.05)*multiplier and pose_y >= abs(goals[0][0][1]-.05)*multiplier and pose_y <= abs(goals[0][0][1]+.05)*multiplier:
+            firstShape = True
+        if counter == 4:
+            firstShape = False   
+
+        if pose_x >= abs(goals[4][0][0]-.05)*multiplier and pose_x <= abs(goals[4][0][0]+.05)*multiplier and pose_y >= abs(goals[4][0][1]-.05)*multiplier and pose_y <= abs(goals[4][0][1]+.05)*multiplier:
+            secondShape = True
+        if counter == 8:
+            secondShape = False
+        if pose_x >= abs(goals[8][0][0]-.05)*multiplier and pose_x <= abs(goals[8][0][0]+.05)*multiplier and pose_y >= abs(goals[8][0][1]-.05)*multiplier and pose_y <= abs(goals[8][0][1]+.05)*multiplier:
+            thirdShape = True
+        
+            
+               
+         #current value should be between start and end point
+        if firstShape == True and pose_x >= abs(goals[counter][0][0] -.15) * multiplier and pose_x <= abs(goals[counter][2][0]+.15)* multiplier and pose_y >= abs(goals[counter][0][1]-.15)* multiplier and pose_y <= abs(goals[counter][2][1]+.15)* multiplier: 
+            floor_pen.write(True)
+        elif secondShape == True and pose_x >= abs(goals[counter][0][0] -.15) * multiplier and pose_x <= abs(goals[counter][2][0]+.15)* multiplier and pose_y >= abs(goals[counter][0][1]-.15)* multiplier and pose_y <= abs(goals[counter][2][1]+.15)* multiplier: 
+            floor_pen.write(True)
+        elif thirdShape == True and pose_x >= abs(goals[counter][0][0] -.15) * multiplier and pose_x <= abs(goals[counter][2][0]+.15)* multiplier and pose_y >= abs(goals[counter][0][1]-.15)* multiplier and pose_y <= abs(goals[counter][2][1]+.15)* multiplier: 
+            floor_pen.write(True)
+        else:
+            floor_pen.write(False)
+        # floor_pen.write(True)    
+        curr_line = goals[counter]
+        x = curr_line[state][0]*multiplier
+        y = curr_line[state][1]*multiplier
+        
+        
+        # x = 2.142855
+        # y = 2.8571400000000002
+        # print(x, y, pose_x, pose_y)
+        
+        # print(x, y)
+        
+        # vL = MAX_SPEED/2
+        # vR = MAX_SPEED/2
+        
+        rho = math.sqrt(((x - pose_x)**2) + ((y - pose_y)**2))# euclidian distance
+        previous_aa = aa
+        aa = math.atan2(y - pose_y, x - pose_x)
+        
+        # Shiv: Trying some hack to contain the angular error within a logical range
+        # At one point, this becomes -3.13 from 2.14 suddenly and the robot turns in just the opposite direction
+        if abs(previous_aa - aa) > math.pi:
+            aa = -aa
+        
+        # Shiv: The compass also suddenly changes the pose_theta drastically and this is again a hack
+        if pose_theta > math.pi:
+            pose_theta -= 2*math.pi
+        alpha = aa + pose_theta
+        
+        if rho < 0.10:
+            state += 1
+        
+        if state >= 3:
+            state = 0
+            counter +=1
+        print("goal and pose ", x, y, pose_x, pose_y)
+        print(rho, alpha, aa, pose_theta)
+        print("state", state, "line", counter)
+    
+        # xNew = p1*rho
+        # dtheta = -p2*alpha  
+        if abs(alpha)>0.5:
+            xNew = 0
+            dtheta = -10*alpha
+        else:
+            xNew = 5*rho
+            dtheta = -5*alpha
+        
+        vL = (xNew - (dtheta*(AXLE_LENGTH/2.)))
+        vR = (xNew + (dtheta*(AXLE_LENGTH/2.)))   
+        # print(vL, vR)
+        if vL > MAX_SPEED/4:
+            vL = MAX_SPEED/4
+        elif vL < -MAX_SPEED/4:
+            vL = -MAX_SPEED/4
+    
+        if vR > MAX_SPEED/4:
+            vR = MAX_SPEED/4
+        elif vR < -MAX_SPEED/4 :
+            vR = -MAX_SPEED/4
+        # pose_x += (vL+vR)/2/MAX_SPEED*MAX_SPEED_MS*timestep/1000.0*math.cos(pose_theta)
+        # pose_y -= (vL+vR)/2/MAX_SPEED*MAX_SPEED_MS*timestep/1000.0*math.sin(pose_theta)
+        # pose_theta += (vR-vL)/AXLE_LENGTH/MAX_SPEED*MAX_SPEED_MS*timestep/1000.0
+        
+        # #pose_x += (vL+vR)/2/MAX_SPEED*MAX_SPEED_MS*timestep/1000.0*math.cos(pose_theta)
+        # #pose_y += (vL+vR)/2/MAX_SPEED*MAX_SPEED_MS*timestep/1000.0*math.sin(pose_theta)
+        # #pose_theta += (vR-vL)/AXLE_LENGTH/MAX_SPEED*MAX_SPEED_MS*timestep/1000.0
+        
+        if counter > len(goals) - 1:
+            vL = 0
+            vR = 0
+            # counter = 0
+
+        robot_parts[MOTOR_LEFT].setVelocity(vL)
+        robot_parts[MOTOR_RIGHT].setVelocity(vR)
+    if mode == 'wall': 
+        print('wall mode')
+        wall_pen.write(True)
+    if mode == 'manual': 
+        print('manual')
+# Enter here exit cleanup code.
